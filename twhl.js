@@ -1,22 +1,26 @@
 var Discord = require('discord.io');
 var logger = require('winston');
 var auth = require('./auth.json');
+
 // Configure logger settings
 logger.remove(logger.transports.Console);
 logger.add(new logger.transports.Console, {
     colorize: true
 });
 logger.level = 'debug';
+
 // Initialize Discord Bot
 var bot = new Discord.Client({
    token: auth.token,
    autorun: true
 });
+
 bot.on('ready', function (evt) {
     logger.info('Connected');
     logger.info('Logged in as: ');
     logger.info(bot.username + ' - (' + bot.id + ')');
 });
+
 // Whenever a message happens
 bot.on('message', function(user, userID, channelID, message, evt) {
     // Check if it's a command (starts by "!")
@@ -100,12 +104,12 @@ bot.on('message', function(user, userID, channelID, message, evt) {
     } else {
         // If we're here, it's not a command, ignore all messages sent by the bot itself
         if (userID != "513501693753688066") {
-            if (message.includes("status report")) { // Status report joke
+            if (message.toLowerCase().includes("status report")) { // Status report joke
                 bot.sendMessage({
                     to: channelID,
                     message: "Did you submit your status report to the administrator today?"
                 });
-            } else if (message.includes("the core")) { // The Core release date joke
+            } else if (message.toLowerCase().includes("the core")) { // The Core release date joke
                 bot.sendMessage({
                     to: channelID,
                     message: "Release date: unknown"
