@@ -1,6 +1,8 @@
 var Discord = require('discord.io');
 var logger = require('winston');
 var auth = require('./auth.json');
+const lib = require('./lib');
+const child_process = require('child_process');
 
 // Configure logger settings
 logger.remove(logger.transports.Console);
@@ -53,10 +55,23 @@ bot.on('message', function(user, userID, channelID, message, evt) {
                 break;
             // !compo
             case 'compo':
-                bot.sendMessage({
-                    to: channelID,
-                    message: '**The Whole Ascension Life (Mini Competition)** can be found here: https://twhl.info/competition/brief/36'
-                });
+                let compoUrl = 'https://twhl.info/api/competitions/paged?sort_descending=true&count=3&expand=type,judge_type,status';
+                lib.getJSON(compoUrl, result => {
+                    let comps = result.items.filter(x => x.status.name != 'Draft' && x.status.name != 'Closed');
+                    var msg = 'There are currently no active competitions. Send messages to Urby if you want to see one!';
+                    if (comps.length > 0) {
+                        msg = '';
+                        comps.reverse().forEach(c => {
+                            var daysLeft = Math.round((Date.parse(c.close_date) - new Date()) / 1000 / 60 / 60 / 24);
+                            msg += `**${c.name}** - ${c.status.name} - https://twhl.info/competition/brief/${c.id}\n`;
+                            if (daysLeft > 0) msg += `${c.type.name} - ${daysLeft} days left to enter!\n`;
+                        });
+                    }
+                    bot.sendMessage({
+                        to: channelID,
+                        message: msg
+                    });
+                })
                 break;
             // !wiki
             case 'wiki':
@@ -99,11 +114,39 @@ bot.on('message', function(user, userID, channelID, message, evt) {
                     message: `The **_${args[0]}_** role has been assigned to <@${userID}>`
                 });
                 break;
+            // Auto-update
+            case 'update':
+                let channel = bot.channels[channelID];
+                let server = bot.servers[channel.guild_id];
+                let member = server.members[userID];
+
+                let admin_role = null;
+                for (const key in server.roles) {
+                    if (server.roles.hasOwnProperty(key)) {
+                        const role = server.roles[key];
+                        if (role.name == 'Admins') {
+                            admin_role = role;
+                            break;
+                        }
+                    }
+                }
+                if (!admin_role || admin_role.name != 'Admins') break;
+                if (member.roles.indexOf(admin_role.id) < 0) break;
+                
+                bot.sendMessage({
+                    to: channelID,
+                    message: 'Updating...'
+                }, () => {
+                    child_process.execSync('git reset --hard');
+                    child_process.execSync('git pull');
+                    child_process.execSync('pm2 restart twhl.js');
+                });
+                break;
             // Just add any case commands if you want to..
         }
     } else {
         // If we're here, it's not a command, ignore all messages sent by the bot itself
-        if (userID != "513501693753688066") {
+        if (userID != bot.id) {
             if (message.toLowerCase().includes("status report")) { // Status report joke
                 bot.sendMessage({
                     to: channelID,
