@@ -36,7 +36,7 @@ bot.on('message', function(user, userID, channelID, message, evt) {
             case 'twhl':
                 bot.sendMessage({
                     to: channelID,
-                    message: 'Up and ready!'
+                    message: 'Up and ready! Auto update!'
                 });
                 break;
             // !sledge
