@@ -153,9 +153,19 @@ bot.on('message', function(user, userID, channelID, message, evt) {
                     message: "Did you submit your status report to the administrator today?"
                 });
             } else if (message.toLowerCase().includes("the core")) { // The Core release date joke
-                bot.sendMessage({
-                    to: channelID,
-                    message: "Release date: unknown"
+                lib.maybe(() => {
+                    let msg = lib.choose([
+                        'Release date: unknown',
+                        'Release date: Oct 14 2073',
+                        'Release date has increased by 1 month',
+                        'You mean that vapourware mod?',
+                        'I\'m pretty sure that mod doesn\'t actually exist.',
+                        'Have you ever seen Urby and Gabe in the same room together? Just saying'
+                    ]);
+                    bot.sendMessage({
+                        to: channelID,
+                        message: msg
+                    });
                 });
             }
         }

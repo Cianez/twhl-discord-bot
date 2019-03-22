@@ -24,3 +24,14 @@ exports.getJSON = function(url, callback) {
 
     req.end();
 };
+
+exports.maybe = function(callback, frequency) {
+    if (!frequency) frequency = 0.05;
+    let rand = Math.random();
+    if (rand < frequency) callback();
+}
+
+exports.choose = function(arr) {
+    let rand = Math.floor(Math.random() * arr.length);
+    return arr[rand];
+};
