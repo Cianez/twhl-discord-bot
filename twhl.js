@@ -21,6 +21,7 @@ bot.on('ready', function (evt) {
     logger.info('Connected');
     logger.info('Logged in as: ');
     logger.info(bot.username + ' - (' + bot.id + ')');
+    bot.setPresence({ game: { name: 'TWHL.info' } })
 });
 
 // Whenever a message happens
@@ -43,14 +44,21 @@ bot.on('message', function(user, userID, channelID, message, evt) {
             case 'sledge':
                 bot.sendMessage({
                     to: channelID,
-                    message: 'You can download **Sledge** here: http://sledge-editor.com/'
+                    message: 'You can download **Sledge** here: http://sledge-editor.com'
+                });
+                break;
+            // !hlmv
+            case 'hlmv':
+                bot.sendMessage({
+                    to: channelID,
+                    message: 'You can download **HLMV Standalone** here: https://github.com/Solokiller/HL_Tools/releases'
                 });
                 break;
             // !sharplife
             case 'sharplife':
                 bot.sendMessage({
                     to: channelID,
-                    message: 'You can check **Sharp-Life** here: https://github.com/SamVanheer/SharpLife-Engine'
+                    message: 'You can check **Sharp-Life** here: https://github.com/Solokiller/SharpLife-Engine'
                 });
                 break;
             // !compo
