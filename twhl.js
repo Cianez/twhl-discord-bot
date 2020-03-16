@@ -44,7 +44,7 @@ bot.on('message', function(user, userID, channelID, message, evt) {
             case 'sledge':
                 bot.sendMessage({
                     to: channelID,
-                    message: 'You can download **Sledge** here: http://sledge-editor.com'
+                    message: '**Sledge is no longer supported**. You can still download it here: http://sledge-editor.com/'
                 });
                 break;
             // !hlmv
