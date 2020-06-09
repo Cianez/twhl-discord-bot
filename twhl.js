@@ -128,19 +128,8 @@ bot.on('message', function(user, userID, channelID, message, evt) {
                 let server = bot.servers[channel.guild_id];
                 let member = server.members[userID];
 
-                let admin_role = null;
-                for (const key in server.roles) {
-                    if (server.roles.hasOwnProperty(key)) {
-                        const role = server.roles[key];
-                        if (role.name == 'Admins') {
-                            admin_role = role;
-                            break;
-                        }
-                    }
-                }
-                if (!admin_role || admin_role.name != 'Admins') break;
-                if (member.roles.indexOf(admin_role.id) < 0) break;
-                
+                if (!lib.memberHasPrivilege(true, false, server, member)) break;
+
                 bot.sendMessage({
                     to: channelID,
                     message: 'Updating...'
