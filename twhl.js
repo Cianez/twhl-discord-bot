@@ -139,6 +139,21 @@ bot.on('message', function(user, userID, channelID, message, evt) {
                     child_process.execSync('pm2 restart twhl.js');
                 });
                 break;
+            // Ping
+            case 'ping':
+                if (channelID !== '513507834885963812') break;
+
+                let channel = bot.channels[channelID];
+                let server = bot.servers[channel.guild_id];
+                let member = server.members[userID];
+
+                if (!lib.memberHasPrivilege(true, true, server, member)) break;
+
+                bot.sendMessage({
+                    to: channelID,
+                    message: 'Pong!'
+                });
+                break;
             // Just add any case commands if you want to..
         }
     } else {
