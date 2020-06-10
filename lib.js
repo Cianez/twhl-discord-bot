@@ -36,31 +36,12 @@ exports.choose = function(arr) {
     return arr[rand];
 };
 
-exports.memberHasPrivilege = function(checkAdmin, checkModerator, server, member) {
+exports.memberHasPrivilege = function(checkAdmin, checkModerator, member) {
     if (!checkAdmin && !checkModerator) return true;
 
-    let admin_role = null;
-    let moderator_role = null;
+    if (checkAdmin && member.roles.cache.has('291681201608065024')) return true;
 
-    for (const key in server.roles) {
-        if (server.roles.hasOwnProperty(key)) {
-            const role = server.roles[key];
-            if (role.name == 'Admins') {
-                admin_role = role;
-                break;
-            }
+    if (checkModerators && member.roles.cache.has('291681551316549633')) return true;
 
-            if (role.name == 'Moderators') {
-                moderator_role = role;
-                break;
-            }
-        }
-    }
-
-    if (!admin_role || admin_role.name != 'Admins') return false;
-    if (!moderator_role || moderator_role.name != 'Moderators') return false;
-
-    if (checkAdmin && member.roles.indexOf(admin_role.id) >= 0) return true;
-    if (checkModerator && member.roles.indexOf(moderator_role.id) >= 0) return true;
     return false;
 };

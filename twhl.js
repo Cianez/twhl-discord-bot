@@ -1,4 +1,4 @@
-var Discord = require('discord.io');
+var Discord = require('discord.js');
 var logger = require('winston');
 var auth = require('./auth.json');
 const lib = require('./lib');
@@ -11,55 +11,45 @@ logger.add(new logger.transports.Console, {
 });
 logger.level = 'debug';
 
-// Initialize Discord Bot
-var bot = new Discord.Client({
-   token: auth.token,
-   autorun: true
-});
+// Initialize Discord bot and login
+var bot = new Discord.Client();
+bot.login(auth.token);
 
-bot.on('ready', function (evt) {
+// Whenever the bot is ready
+bot.on('ready', () => {
     logger.info('Connected');
     logger.info('Logged in as: ');
-    logger.info(bot.username + ' - (' + bot.id + ')');
-    bot.setPresence({ game: { name: 'TWHL.info' } })
+    logger.info(bot.user.username + ' - (' + bot.user.id + ')');
+    bot.user.setActivity('TWHL.info', { type: 'WATCHING' });
 });
 
-// Whenever a message happens
-bot.on('message', function(user, userID, channelID, message, evt) {
+// Whenever a message is received
+bot.on('message', message => {
+    // Ignore DMs
+    if (message.channel instanceof Discord.DMChannel) return;
+
     // Check if it's a command (starts by "!")
-    if (message.substring(0, 1) == '!') {
-        var args = message.substring(1).split(' ');
+    if (message.content.substring(0, 1) == '!') {
+        var args = message.content.substring(1).split(' ');
         var cmd = args[0];
 
         args = args.splice(1);
         switch(cmd) {
             // !twhl
             case 'twhl':
-                bot.sendMessage({
-                    to: channelID,
-                    message: 'Up and ready! Auto update!'
-                });
+                message.channel.send('Browse the website at this address: https://twhl.info/');
                 break;
             // !sledge
             case 'sledge':
-                bot.sendMessage({
-                    to: channelID,
-                    message: '**Sledge is no longer supported**. You can still download it here: http://sledge-editor.com/'
-                });
+                message.channel.send('**Sledge is no longer supported**. You can still download it here: http://sledge-editor.com/');
                 break;
             // !hlmv
             case 'hlmv':
-                bot.sendMessage({
-                    to: channelID,
-                    message: 'You can download **HLMV Standalone** here: https://github.com/Solokiller/HL_Tools/releases'
-                });
+                message.channel.send('You can download **HLMV Standalone** here: https://github.com/Solokiller/HL_Tools/releases');
                 break;
             // !sharplife
             case 'sharplife':
-                bot.sendMessage({
-                    to: channelID,
-                    message: 'You can check **Sharp-Life** here: https://github.com/Solokiller/SharpLife-Engine'
-                });
+                message.channel.send('You can check **Sharp-Life** here: https://twhl.info/thread/view/19494');
                 break;
             // !compo
             case 'compo':
@@ -75,32 +65,20 @@ bot.on('message', function(user, userID, channelID, message, evt) {
                             if (daysLeft > 0) msg += `${c.type.name} - ${daysLeft} days left to enter!\n`;
                         });
                     }
-                    bot.sendMessage({
-                        to: channelID,
-                        message: msg
-                    });
+                    message.channel.send(msg);
                 })
                 break;
             // !wiki
             case 'wiki':
-                bot.sendMessage({
-                    to: channelID,
-                    message: '**The wiki contains all of the collective knowledge that the community has acquired over the years**: https://twhl.info/wiki'
-                });
+                message.channel.send('**The wiki contains all of the collective knowledge that the community has acquired over the years**: https://twhl.info/wiki');
                 break;
             // !vault
             case 'vault':
-                bot.sendMessage({
-                    to: channelID,
-                    message: 'TWHL\'s Map **Vault**: https://twhl.info/vault'
-                });
+                message.channel.send('TWHL\'s Map **Vault**: https://twhl.info/vault');
                 break;
             // !server
             case 'server':
-                bot.sendMessage({
-                    to: channelID,
-                    message: 'TWHL\'s **Half-Life Server**: steam://connect/62.104.168.193:27015'
-                });
+                message.channel.send('TWHL\'s **Half-Life Server**: steam://connect/62.104.168.193:27015');
                 break;
             // !role
             case 'role':
@@ -112,59 +90,34 @@ bot.on('message', function(user, userID, channelID, message, evt) {
                 }
                 if (!roleID) break;
 
-                bot.addToRole({
-                    serverID: '291678871856742400',
-                    userID: userID,
-                    roleID: roleID
-                });
-                bot.sendMessage({
-                    to: channelID,
-                    message: `The **_${args[0]}_** role has been assigned to <@${userID}>`
-                });
+                if (message.member.roles.cache.has(roleID)) {
+                    message.member.roles.remove(roleID);
+                    message.channel.send(`The **_${args[0]}_** role has been unassigned to <@${message.author.id}>`);
+                } else {
+                    message.member.roles.add(roleID);
+                    message.channel.send(`The **_${args[0]}_** role has been assigned to <@${message.author.id}>`);
+                }
                 break;
             // Auto-update
             case 'update':
-                let channel = bot.channels[channelID];
-                let server = bot.servers[channel.guild_id];
-                let member = server.members[userID];
+                if (!lib.memberHasPrivilege(true, false, message.member)) break;
 
-                if (!lib.memberHasPrivilege(true, false, server, member)) break;
+                let channel = message.channel;
+                if (channel.id != '513507834885963812') break;
 
-                bot.sendMessage({
-                    to: channelID,
-                    message: 'Updating...'
-                }, () => {
-                    child_process.execSync('git reset --hard');
-                    child_process.execSync('git pull');
-                    child_process.execSync('pm2 restart twhl.js');
-                });
-                break;
-            // Ping
-            case 'ping':
-                if (channelID !== '513507834885963812') break;
-
-                let channel = bot.channels[channelID];
-                let server = bot.servers[channel.guild_id];
-                let member = server.members[userID];
-
-                if (!lib.memberHasPrivilege(true, true, server, member)) break;
-
-                bot.sendMessage({
-                    to: channelID,
-                    message: 'Pong!'
-                });
+                channel.send('Updating...');
+                child_process.execSync('git reset --hard');
+                child_process.execSync('git pull');
+                child_process.execSync('pm2 restart twhl.js');
                 break;
             // Just add any case commands if you want to..
         }
     } else {
         // If we're here, it's not a command, ignore all messages sent by the bot itself
-        if (userID != bot.id) {
-            if (message.toLowerCase().includes("status report")) { // Status report joke
-                bot.sendMessage({
-                    to: channelID,
-                    message: "Did you submit your status report to the administrator today?"
-                });
-            } else if (message.toLowerCase().includes("the core")) { // The Core release date joke
+        if (message.author != bot.user) {
+            if (message.content.toLowerCase().includes("status report")) { // Status report joke
+                message.channel.send("Did you submit your status report to the administrator today?");
+            } else if (message.content.toLowerCase().includes("the core")) { // The Core release date joke
                 lib.maybe(() => {
                     let msg = lib.choose([
                         'Release date: unknown',
@@ -174,10 +127,7 @@ bot.on('message', function(user, userID, channelID, message, evt) {
                         'I\'m pretty sure that mod doesn\'t actually exist.',
                         'Have you ever seen Urby and Gabe in the same room together? Just saying'
                     ]);
-                    bot.sendMessage({
-                        to: channelID,
-                        message: msg
-                    });
+                    message.channel.send(msg);
                 });
             }
         }
@@ -185,17 +135,11 @@ bot.on('message', function(user, userID, channelID, message, evt) {
 });
 
 // Whenever a new member has been added to the guild
-bot.on('guildMemberAdd', function(member) {
-    bot.sendMessage({
-        to: '291678871856742400',
-        message: `Hi <@${member.id}>! :wave: Welcome to the **TWHL Discord Server**! :slight_smile:`
-    });
+bot.on('guildMemberAdd', member => {
+    member.guild.channels.cache.find(ch => ch.name === 'shoutbox-live').send(`Hi ${member}! :wave: Welcome to the **TWHL Discord Server**! :slight_smile:`);
 });
 
 // Whenever a member has been removed from the guild (leaving, kick, ban...)
-bot.on('guildMemberRemove', function(member) {
-    bot.sendMessage({
-        to: '291678871856742400',
-        message: `<@${member.id}> just left us... :cry:`
-    });
+bot.on('guildMemberRemove', member => {
+    member.guild.channels.cache.find(ch => ch.name === 'shoutbox-live').send(`${member} just left us... :cry:`);
 });
