@@ -19,13 +19,13 @@ bot.commands = new Discord.Collection();
 bot.filters = new Discord.Collection();
 
 for (const file of fs.readdirSync('./commands').filter(file => file.endsWith('.js'))) {
-	const command = require(`./commands/${file}`);
-	bot.commands.set(command.name, command);
+    const command = require(`./commands/${file}`);
+    bot.commands.set(command.name, command);
 }
 
 for (const file of fs.readdirSync('./filters').filter(file => file.endsWith('.js'))) {
-	const filter = require(`./filters/${file}`);
-	bot.filters.set(filter.name, filter);
+    const filter = require(`./filters/${file}`);
+    bot.filters.set(filter.name, filter);
 }
 
 // Whenever the bot is ready
