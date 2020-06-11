@@ -13,6 +13,7 @@ module.exports = {
     execute(message, args) {
         if (message.channel.name !== 'bot-testing-channel') return;
         if (!lib.memberHasAllRoles(message.member, ['Admins'])) return;
+        if (message.member.id !== '130279066451312640') return; // Go away everyone else
 
         const production = message.guild.id === '291678871856742400';
         message.channel.send('Updating...');
