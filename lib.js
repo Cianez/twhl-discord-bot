@@ -1,5 +1,6 @@
 const http = require('https');
 const auth = require('./auth.json');
+var Discord = require('discord.js');
 
 exports.getJSON = function(url, callback) {
     var options = {
@@ -36,12 +37,22 @@ exports.choose = function(arr) {
     return arr[rand];
 };
 
-exports.memberHasPrivilege = function(checkAdmin, checkModerator, member) {
-    if (!checkAdmin && !checkModerator) return true;
+/**
+ * Check if the given member has at least one of the roles given in roleNames
+ * @param {Discord.GuildMember} member - User
+ * @param {Array<string>} roleNames - Array of role names
+ */
+exports.memberHasAnyRole = function(member, roleNames) {
+    const matching = member.roles.cache.filter(r => roleNames.includes(r.name));
+    return matching.size > 0;
+};
 
-    if (checkAdmin && member.roles.cache.has('291681201608065024')) return true;
-
-    if (checkModerators && member.roles.cache.has('291681551316549633')) return true;
-
-    return false;
+/**
+ * Check if the given member has at all of the roles given in roleNames
+ * @param {Discord.GuildMember} member - User
+ * @param {Array<string>} roleNames - Array of role names
+ */
+exports.memberHasAllRoles = function(member, roleNames) {
+    const matching = member.roles.cache.filter(r => roleNames.includes(r.name));
+    return matching.size === roleNames.length;
 };
