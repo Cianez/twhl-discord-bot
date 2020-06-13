@@ -9,6 +9,8 @@ module.exports = {
      * @param {Array<string>} args 
      */
     execute(message) {
+        if (message.channel.name !== 'the-core') return; // only in the core channel
+        
         // Let's have some positivity for a change!
         lib.maybe(() => {
             let msg = lib.choose([
