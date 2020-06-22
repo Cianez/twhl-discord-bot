@@ -79,5 +79,5 @@ bot.on('guildMemberAdd', member => {
 bot.on('guildMemberRemove', member => {
     member.guild.channels.cache
         .find(ch => ch.name === 'shoutbox-live')
-        .send(`${member} just left us... :cry:`);
+        .send(`${member.displayName} (*${member.user.username}#${member.user.discriminator}*) just left us... :cry:`);
 });
