@@ -6,6 +6,6 @@
   "author": "TWHL Bot Development Team",
   "dependencies": {
     "discord.js": "^12.2.0",
-    "winston": "^3.2.1"
+    "winston": "^3.3.3"
   }
 }
