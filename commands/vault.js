@@ -7,7 +7,9 @@ module.exports = {
      * @param {Discord.Message} message 
      * @param {Array<string>} args 
      */
-    execute(message, args) {
+    execute(message, args, bot) {
+        if (bot.silenced === true) return;
+        
         message.channel.send('TWHL\'s Map **Vault**: https://twhl.info/vault');
     },
 };

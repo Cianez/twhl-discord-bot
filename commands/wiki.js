@@ -7,7 +7,9 @@ module.exports = {
      * @param {Discord.Message} message 
      * @param {Array<string>} args 
      */
-    execute(message, args) {
+    execute(message, args, bot) {
+        if (bot.silenced === true) return;
+        
         message.channel.send('https://twhl.info/wiki - The wiki contains all of the collective knowledge that the community has acquired over the years. Anybody can edit it!');
     },
 };

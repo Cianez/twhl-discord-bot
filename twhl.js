@@ -2,8 +2,6 @@ const fs = require('fs');
 const Discord = require('discord.js');
 const logger = require('winston');
 const auth = require('./auth.json');
-const lib = require('./lib');
-const child_process = require('child_process');
 
 // Configure logger settings
 logger.remove(logger.transports.Console);
@@ -13,10 +11,12 @@ logger.level = 'debug';
 // Initialize Discord bot and login
 const bot = new Discord.Client();
 bot.login(auth.token);
+bot.logger = logger;
 
 // Set up commands and filters
 bot.commands = new Discord.Collection();
 bot.filters = new Discord.Collection();
+bot.events = new Discord.Collection();
 
 for (const file of fs.readdirSync('./commands').filter(file => file.endsWith('.js'))) {
     const command = require(`./commands/${file}`);
@@ -28,13 +28,11 @@ for (const file of fs.readdirSync('./filters').filter(file => file.endsWith('.js
     bot.filters.set(filter.name, filter);
 }
 
-// Whenever the bot is ready
-bot.on('ready', () => {
-    logger.info('Connected');
-    logger.info('Logged in as: ');
-    logger.info(bot.user.username + ' - (' + bot.user.id + ')');
-    bot.user.setActivity('TWHL.info', { type: 'WATCHING' });
-});
+for (const file of fs.readdirSync('./events').filter(file => file.endsWith('.js'))) {
+    const event = require(`./events/${file}`);
+    bot.events.set(event.name, event);
+    event.register(bot);
+}
 
 // Whenever a message is received
 bot.on('message', message => {
@@ -57,7 +55,6 @@ bot.on('message', message => {
         }
 
     } else {
-
         for (const f of bot.filters.array()) {
             if (f.matcher.exec(message.content)) {
                 f.execute(message, bot);
@@ -66,18 +63,4 @@ bot.on('message', message => {
         }
 
     }
-});
-
-// Whenever a new member has been added to the guild
-bot.on('guildMemberAdd', member => {
-    member.guild.channels.cache
-        .find(ch => ch.name === 'shoutbox-live')
-        .send(`Hi ${member}! :wave: Welcome to the **TWHL Discord Server**! :slight_smile:`);
-});
-
-// Whenever a member has been removed from the guild (leaving, kick, ban...)
-bot.on('guildMemberRemove', member => {
-    member.guild.channels.cache
-        .find(ch => ch.name === 'shoutbox-live')
-        .send(`${member.displayName} (*${member.user.username}#${member.user.discriminator}*) just left us... :cry:`);
 });

@@ -7,7 +7,9 @@ module.exports = {
      * @param {Discord.Message} message 
      * @param {Array<string>} args 
      */
-    execute(message, args) {
+    execute(message, args, bot) {
+        if (bot.silenced === true) return;
+        
         message.channel.send('You can download **HLMV Standalone** here: https://github.com/Solokiller/HL_Tools/releases');
     },
 };

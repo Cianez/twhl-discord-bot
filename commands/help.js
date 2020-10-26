@@ -13,6 +13,8 @@ module.exports = {
      * @param {Array<string>} args 
      */
     execute(message, args, bot) {
+        if (bot.silenced === true) return;
+        
         const now = +new Date();
         const nextAllowedRun = lastRun + cooldown;
         if (nextAllowedRun > now) {

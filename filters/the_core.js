@@ -8,7 +8,8 @@ module.exports = {
      * @param {Discord.Message} message 
      * @param {Array<string>} args 
      */
-    execute(message) {
+    execute(message, bot) {
+        if (bot.silenced === true) return;
         if (message.channel.name !== 'the-core') return; // only in the core channel
         
         // Let's have some positivity for a change!

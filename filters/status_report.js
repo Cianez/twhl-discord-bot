@@ -11,7 +11,9 @@ module.exports = {
      * @param {Discord.Message} message 
      * @param {Array<string>} args 
      */
-    execute(message) {
+    execute(message, bot) {
+        if (bot.silenced === true) return;
+        
         lib.maybe(() => {
             const now = +new Date();
             const nextAllowedRun = lastRun + cooldown;

@@ -8,7 +8,9 @@ module.exports = {
      * @param {Discord.Message} message 
      * @param {Array<string>} args 
      */
-    execute(message, args) {
+    execute(message, args, bot) {
+        if (bot.silenced === true) return;
+        
         let compoUrl = 'https://twhl.info/api/competitions/paged?sort_descending=true&count=3&expand=type,judge_type,status';
         lib.getJSON(compoUrl, result => {
             let comps = result.items.filter(x => x.status.name != 'Draft' && x.status.name != 'Closed');

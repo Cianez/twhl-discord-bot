@@ -21,6 +21,7 @@ module.exports = {
         if (production) {
             child_process.execSync('git reset --hard');
             child_process.execSync('git pull');
+            child_process.execSync('npm install');
             child_process.execSync('pm2 restart twhl.js');
         } else {
             setTimeout(() => {
