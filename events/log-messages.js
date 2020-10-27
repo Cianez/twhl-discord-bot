@@ -79,6 +79,10 @@ module.exports = {
                     return { name: 'Embed', value: values.filter(x => x).join('\n') };
                 });
                 alert.addField('Removed embeds', 'See embeds below').addFields(...embeds);
+            } else if (oldMessage.embeds.length === 0 && message.embeds.length > 0) {
+                // The action was to add embeds, the Discord client does this automatically.
+                // We don't need to log this.
+                return;
             } else {
                 alert.addField('I don\'t know!', 'The edit was something I am unable to deal with. Time to panic!');
                 alert.addField('Debug information', '```\n' +  JSON.stringify({
