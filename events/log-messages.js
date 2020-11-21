@@ -31,7 +31,12 @@ module.exports = {
             if (message.member.user.bot) return;
 
             const embeds = message.embeds.map(e => {
-                const values = [e.type + ' - ' + e.provider.name, e.title, e.url];
+                let values;
+                if (e.provider != null) {
+                    values = [e.type + ' - ' + e.provider.name, e.title, e.url];
+                } else {
+                    values = [e.type, e.title, e.url];
+                }
                 return { name: 'Embed', value: values.filter(x => x).join('\n') };
             });
             const attachInfo = message.attachments.map(a => {
@@ -61,7 +66,7 @@ module.exports = {
         bot.on('messageUpdate', (oldMessage, message) => {
             if (!logChannel) return;
             if (message.member.user.bot) return;
-            
+
             const alert = new Discord.MessageEmbed()
                 .setColor('#FFBA1C')
                 .setTitle('Message updated')
