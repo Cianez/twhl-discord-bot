@@ -47,7 +47,8 @@ bot.on('message', message => {
         const cmd = args.shift().toLowerCase();
         if (bot.commands.has(cmd)) {
             try {
-                bot.commands.get(cmd).execute(message, args, bot);
+                const c = bot.commands.get(cmd);
+                c.execute.call(c, message, args, bot);
             } catch (error) {
                 logger.error(error);
                 message.channel.send('I\'m broken. Talk to an administrator or something.');

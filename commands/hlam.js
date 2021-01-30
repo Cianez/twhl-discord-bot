@@ -1,9 +1,8 @@
 var Discord = require('discord.js');
 
 module.exports = {
-    name: 'hlmv',
-    description: 'Posts information about HLMV.',
-    hidden: true,
+    name: 'hlam',
+    description: 'Posts information about Half-Life Asset Manager.',
     /**
      * @param {Discord.Message} message 
      * @param {Array<string>} args 
