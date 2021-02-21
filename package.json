@@ -5,7 +5,7 @@
   "main": "twhl.js",
   "author": "TWHL Bot Development Team",
   "dependencies": {
-    "discord.js": "^12.4.1",
+    "discord.js": "https://github.com/discordjs/discord.js.git",
     "winston": "^3.3.3"
   }
 }

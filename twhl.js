@@ -9,7 +9,9 @@ logger.add(new logger.transports.Console, { colorize: true });
 logger.level = 'debug';
 
 // Initialize Discord bot and login
-const bot = new Discord.Client();
+const bot = new Discord.Client({
+    intents: ['GUILDS','GUILD_MESSAGES']
+});
 bot.login(auth.token);
 bot.logger = logger;
 
