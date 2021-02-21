@@ -4,7 +4,7 @@ const child_process = require('child_process');
 
 module.exports = {
     name: 'update',
-    description: 'Posts information about any current competitions on TWHL.',
+    description: 'Update the bot',
     hidden: true,
     /**
      * @param {Discord.Message} message 
