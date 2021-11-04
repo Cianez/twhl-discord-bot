@@ -23,7 +23,12 @@ module.exports = {
         }
         lastRun = now;
 
-        const commands = bot.commands.filter(x => !x.hidden).map(c => `!${c.name} - ${c.description}`);
+        const commands = bot.commands
+            .filter(x => !x.hidden)
+            .map(c => {
+                if (c.slash) return `/${c.name} - ${c.description}`;
+                else return `!${c.name} - ${c.description}`
+            });
         commands.sort();
         message.channel.send('Bot commands:\n' + commands.join('\n'));
     },

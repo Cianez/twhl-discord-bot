@@ -27,7 +27,7 @@ exports.getJSON = function(url, callback) {
 };
 
 exports.maybe = function(callback, frequency) {
-    if (!frequency) frequency = 0.05;
+    if (!frequency) frequency = 0.1;
     let rand = Math.random();
     if (rand < frequency) callback();
 }

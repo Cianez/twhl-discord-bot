@@ -15,7 +15,7 @@ module.exports = {
         // Let's have some positivity for a change!
         lib.maybe(() => {
             let msg = lib.choose([
-                'Release date: March 31 2021',
+                'Release date: Unknown :(',
                 'You mean that amazing mod that everybody\'s looking forward to?',
                 'I\'m pretty sure that mod is coming out soon and it\'ll be really cool!',
                 'Urby, I know I\'m just a bot, but you can do it! The Core\'s going to be great!'

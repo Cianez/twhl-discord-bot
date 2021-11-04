@@ -1,15 +1,31 @@
+const { SlashCommandBuilder } = require('@discordjs/builders');
 var Discord = require('discord.js');
 
 module.exports = {
     name: 'role',
-    description: 'Add (or remove) a role from yourself. <role name> must be one of: Mappers, Modellers, Programmers',
-    args: ['<role name>'],
+    description: 'Add (or remove) a role from yourself.',
+    slash: true,
     /**
-     * @param {Discord.Message} message 
-     * @param {Array<string>} args 
-     * @param {Discord.Client} bot
+     * 
+     * @param {SlashCommandBuilder} builder 
      */
-    async execute(message, args, bot) {
+    addOptions(builder) {
+        builder.addStringOption(r => r
+            .setName('role')
+            .setDescription('Role name')
+            .setRequired(true)
+            .addChoices([
+                ['Mappers', 'mappers'],
+                ['Modellers', 'modellers'],
+                ['Programmers', 'programmers'],
+                ['Multiplayer crew', 'multiplayer crew']
+            ])
+        );
+    },
+    /**
+     * @param {Discord.Interaction<Discord.CacheType>} interaction 
+     */
+    async executeSlashCommand(interaction) {
         const allowedRoles = [
             'mappers',
             'modellers',
@@ -19,27 +35,27 @@ module.exports = {
         const specialMessages = {
             'multiplayer crew!add': 'When you\'re in this group, you will be @pinged when somebody wants to play a multiplayer game (e.g. CS1.6, HLDM, Sven Co-op).'
         };
-        const roleName = args.join(' ').toLowerCase();
+        const roleName = (interaction.options.getString('role', true) || '').toLowerCase();
         if (!allowedRoles.includes(roleName)) {
-            await message.reply('How to use: type `!role <name>`, where `<name>` is one of the following: ' + allowedRoles.join(', '));
+            await interaction.reply({ content: roleName +  ';;How to use: type `!role <name>`, where `<name>` is one of the following: ' + allowedRoles.join(', '), ephemeral: true });
             return;
         }
 
-        const role = message.guild.roles.cache.find(r => r.name.toLowerCase() === roleName);
+        const role = interaction.guild.roles.cache.find(r => r.name.toLowerCase() === roleName);
         if (!role) return;
 
         let msgText;
 
         const roleId = role.id;
-        if (message.member.roles.cache.has(roleId)) {
-            message.member.roles.remove(roleId);
+        if (interaction.member.roles.cache.has(roleId)) {
+            interaction.member.roles.remove(roleId);
             msgText = `You've been removed from the **_${role.name}_** role.`;
             if (specialMessages[`${roleName}!remove`]) msgText += ' ' + specialMessages[`${roleName}!remove`];
         } else {
-            message.member.roles.add(roleId);
+            interaction.member.roles.add(roleId);
             msgText = `You've been added to the **_${role.name}_** role.`;
             if (specialMessages[`${roleName}!add`]) msgText += ' ' + specialMessages[`${roleName}!add`];
         }
-        await message.reply(msgText);
-    },
+        await interaction.reply({ content: msgText, ephemeral: true });
+    }
 };
