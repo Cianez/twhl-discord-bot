@@ -1,5 +1,33 @@
 var Discord = require('discord.js');
 
+const isImage = (/** @type {Discord.MessageAttachment} */ attachment) => {
+    const extensions = ['.png', '.jpg', '.jpeg', '.gif'];
+    return attachment.name && extensions.some(e => attachment.name.endsWith(e));
+};
+
+const isMedia = (/** @type {Discord.MessageAttachment} */ attachment) => {
+    const extensions = ['.mp4', '.webm', '.mov', '.gifv'];
+    return attachment.name && extensions.some(e => attachment.name.endsWith(e));
+};
+
+function round(num) {
+    return Math.round(num * 100) / 100;
+}
+function format_filesize(bytes)
+{
+    if (bytes < 1024) return bytes + 'b';
+    const kbytes = bytes / 1024;
+    if (kbytes < 1024) return round(kbytes) + 'kb';
+    const mbytes = kbytes / 1024;
+    if (mbytes < 1024) return round(mbytes) + 'mb';
+    const gbytes = mbytes / 1024;
+    if (gbytes < 1024) return round(gbytes) + 'gb';
+    const tbytes = gbytes / 1024;
+    if (tbytes < 1024) return round(tbytes) + 'tb';
+    const pbytes = tbytes / 1024;
+    return round(pbytes) + 'pb';
+}
+
 module.exports = {
     name: 'log-messages',
     /**
@@ -13,16 +41,6 @@ module.exports = {
         bot.on('ready', () => {
             logChannel = bot.channels.cache.find(x => x.name === 'moderation-log');
         });
-
-        const isImage = (/** @type {Discord.MessageAttachment} */ attachment) => {
-            const extensions = ['.png', '.jpg', '.jpeg', '.gif'];
-            return attachment.name && extensions.some(e => attachment.name.endsWith(e));
-        };
-
-        const isMedia = (/** @type {Discord.MessageAttachment} */ attachment) => {
-            const extensions = ['.mp4', '.webm', '.mov', '.gifv'];
-            return attachment.name && extensions.some(e => attachment.name.endsWith(e));
-        };
 
         // Track deletes
         bot.on('messageDelete', message => {
@@ -40,10 +58,10 @@ module.exports = {
                 return { name: 'Embed', value: values.filter(x => x).join('\n') };
             });
             const attachInfo = message.attachments.map(a => {
-                return { name: 'Attachment', value: a.name + ' - ' + a.url };
+                return { name: 'Attachment', value: a.contentType + ': ' + a.name + ' (' + format_filesize(a.size) + ') ' + ' - ' + a.url };
             });
-            const attachments = message.attachments.filter(a => isImage(a) || isMedia(a)).map(a => {
-                return new Discord.MessageAttachment(a.proxyURL, a.name);
+            const files = message.attachments.filter(a => isImage(a) || isMedia(a)).map(a => {
+                return new Discord.MessageAttachment(a.attachment, a.name);
             });
             const alert = new Discord.MessageEmbed()
                 .setColor('#FF0A43')
@@ -54,12 +72,11 @@ module.exports = {
                 .addField('Message text', message.cleanContent || 'None')
                 .addFields(...embeds)
                 .addFields(...attachInfo)
-                .attachFiles(attachments)
                 .setTimestamp();
-            if (attachments.length == 1 && isImage(attachments[0]) && attachments[0].name) {
-                alert.setImage('attachment://' + attachments[0].name);
+            if (files.length == 1 && isImage(files[0]) && files[0].name) {
+                alert.setImage('attachment://' + files[0].name);
             }
-            logChannel.send(alert);
+            logChannel.send({ embeds: [ alert ], files });
         });
 
         // Track updates
@@ -67,6 +84,7 @@ module.exports = {
             if (!logChannel) return;
             if (message.member.user.bot) return;
 
+            const files = [];
             const alert = new Discord.MessageEmbed()
                 .setColor('#FFBA1C')
                 .setTitle('Message updated')
@@ -88,6 +106,21 @@ module.exports = {
                 // The action was to add embeds, the Discord client does this automatically.
                 // We don't need to log this.
                 return;
+            } else if (message.attachments.size < oldMessage.attachments.size) {
+                // Attachments removed from message
+                const attachInfo = oldMessage.attachments.map(a => {
+                    return { name: 'Attachment', value: a.contentType + ': ' + a.name + ' (' + format_filesize(a.size) + ') ' + ' - ' + a.url };
+                });
+                files.push(...oldMessage.attachments.filter(a => isImage(a) || isMedia(a)).filter(x => x.size < 2048 * 1024 * 1024).map(a => {
+                    return new Discord.MessageAttachment(a.attachment, a.name);
+                }));
+                alert.addField('Attachments removed', 'See details').addFields(...attachInfo);
+                if (attachInfo.length == 1 && files.length == 1 && isImage(files[0])) {
+                    alert.setImage('attachment://' + files[0].name);
+                }
+            } else if (message.pinned != oldMessage.pinned) {
+                // Only moderators can do this, so we don't need to log it
+                return;
             } else {
                 alert.addField('I don\'t know!', 'The edit was something I am unable to deal with. Time to panic!');
                 alert.addField('Debug information', '```\n' +  JSON.stringify({
@@ -101,7 +134,7 @@ module.exports = {
                     }
                 }).substr(0, 1000) + '\n```');
             }
-            logChannel.send(alert);
+            logChannel.send({ embeds: [alert], files });
         });
     }
 };
