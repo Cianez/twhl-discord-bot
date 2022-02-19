@@ -19,8 +19,8 @@ module.exports = {
         bot.on('guildMemberRemove', member => {
             if (bot.silenced === true) return;
             member.guild.channels.cache
-                .find(ch => ch.name === 'shoutbox-live')
-                .send(`${member.displayName} (*${member.user.username}#${member.user.discriminator}*) just left us... :cry:`);
+                .find(ch => ch.name === 'moderation-log')
+                .send(`${member.displayName} (*${member.user.username}#${member.user.discriminator}*) just left the server.`);
         });
     }
 };
