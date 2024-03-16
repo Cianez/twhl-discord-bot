@@ -13,7 +13,7 @@ logger.level = 'debug';
 
 // Initialize Discord bot and login
 const bot = new Discord.Client({
-    intents: ['GUILDS', 'GUILD_MEMBERS','GUILD_MESSAGES']
+    intents: ['Guilds', 'GuildMembers', 'GuildMessages', 'MessageContent']
 });
 bot.login(auth.token);
 bot.logger = logger;
@@ -36,7 +36,7 @@ for (const file of fs.readdirSync('./commands').filter(file => file.endsWith('.j
     }
 }
 if (slashCommands.length > 0) {
-    const rest = new REST({ version: '9' }).setToken(auth.token);
+    const rest = new REST().setToken(auth.token);
 
     rest.put(Routes.applicationGuildCommands(auth.clientid, auth.guildid), { body: slashCommands })
         .then(() => console.log('Successfully registered application commands.'))

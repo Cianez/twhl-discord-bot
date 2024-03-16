@@ -14,12 +14,12 @@ module.exports = {
             .setName('role')
             .setDescription('Role name')
             .setRequired(true)
-            .addChoices([
-                ['Mappers', 'mappers'],
-                ['Modellers', 'modellers'],
-                ['Programmers', 'programmers'],
-                ['Multiplayer crew', 'multiplayer crew']
-            ])
+            .addChoices(
+                { name: 'Mappers', value: 'mappers' },
+                { name: 'Modellers', value: 'modellers' },
+                { name: 'Programmers', value: 'programmers' },
+                { name: 'Multiplayer crew', value: 'multiplayer crew' }
+            )
         );
     },
     /**
