@@ -10,7 +10,7 @@ module.exports = {
      */
     execute(message, bot) {
         if (bot.silenced === true) return;
-        if (message.channel.name !== 'the-core') return; // only in the core channel
+        if (message.channel.name !== 'shoutbox-live') return; // only in the shoutbox channel
         
         // Let's have some positivity for a change!
         lib.maybe(() => {
@@ -18,7 +18,8 @@ module.exports = {
                 'Release date: Unknown :(',
                 'You mean that amazing mod that everybody\'s looking forward to?',
                 'I\'m pretty sure that mod is coming out soon and it\'ll be really cool!',
-                'Urby, I know I\'m just a bot, but you can do it! The Core\'s going to be great!'
+                'Urby, I know I\'m just a bot, but you can do it! The Core\'s going to be great!',
+                'RELEASE THE CORE - 2024! It\'s happening!!'
             ]);
             message.channel.send(msg);
         });
