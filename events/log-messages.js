@@ -129,6 +129,9 @@ module.exports = {
             } else if (message.pinned != oldMessage.pinned) {
                 // Only moderators can do this, so we don't need to log it
                 return;
+            } else if (message.editedTimestamp == oldMessage.editedTimestamp) {
+                // Discord doing weird stuff, user probably didn't actually do anything
+                return
             } else {
                 alert.addFields([
                     { name: 'I don\'t know!', value: 'The edit was something I am unable to deal with. Time to panic!' },
