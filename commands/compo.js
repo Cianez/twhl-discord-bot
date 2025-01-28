@@ -14,7 +14,7 @@ module.exports = {
         let compoUrl = 'https://twhl.info/api/competitions/paged?sort_descending=true&count=3&expand=type,judge_type,status';
         lib.getJSON(compoUrl, result => {
             let comps = result.items.filter(x => x.status.name != 'Draft' && x.status.name != 'Closed');
-            let msg = 'There are currently no active competitions. Send messages to Urby if you want to see one!';
+            let msg = 'There are currently no active competitions. An announcement will be made when a new one will be organized.';
             if (comps.length > 0) {
                 msg = '';
                 comps.reverse().forEach(c => {
