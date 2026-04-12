@@ -99,8 +99,8 @@ module.exports = {
                 .setTimestamp();
             if (oldMessage.cleanContent !== message.cleanContent) {
                 alert.addFields([
-                    { name: 'Old message', value: oldMessage.cleanContent || 'None' },
-                    { name: 'New message', value: message.cleanContent || 'None' }
+                    { name: 'Old message', value: oldMessage.cleanContent?.substring(0, 1000) || 'None' },
+                    { name: 'New message', value: message.cleanContent?.substring(0, 1000) || 'None' }
                 ]);
             } else if (oldMessage.embeds.length > 0 && message.embeds.length === 0) {
                 const embeds = oldMessage.embeds.map(e => {
