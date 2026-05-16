@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "noImplicitAny": false,
+        "strict": true,
+        "allowJs": true,
+        "checkJs": true
+    },
+    "include": [
+        "**/*.js",
+        "types/**/*.d.ts"
+    ],
+    "typeAcquisition": {
+        "include": [
+            "node"
+        ]
+    },
+    "exclude": [
+        "node_modules"
+    ]
+}

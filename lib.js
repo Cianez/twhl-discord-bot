@@ -1,15 +1,23 @@
-const http = require('https');
-const auth = require('./auth.json');
-var Discord = require('discord.js');
+import { request } from 'https';
+import { GuildMember } from 'discord.js';
 
-exports.getJSON = function(url, callback) {
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const { apikey } = require('./auth.json');
+
+/**
+ * 
+ * @param {string} url 
+ * @param {(data : any) => void} callback 
+ */
+export function getJSON(url, callback) {
     var options = {
         headers: {
             "X-Requested-With": "XMLHttpRequest",
-            "Authorization": auth.apikey
+            "Authorization": apikey
         }
     };
-    var req = http.request(url, options, res => {
+    var req = request(url, options, res => {
         var output = '';
         res.setEncoding('utf8');
 
@@ -24,20 +32,34 @@ exports.getJSON = function(url, callback) {
     });
 
     req.end();
-};
+}
 
-exports.maybe = function(callback, frequency) {
+/**
+ * @param {() => any} callback 
+ * @param {number} frequency 
+ */
+export function maybe(callback, frequency = 0.1) {
     if (!frequency) frequency = 0.1;
     let rand = Math.random();
     if (rand < frequency) callback();
 }
 
-exports.choose = function(arr) {
+/**
+ * @template T
+ * @param {Array<T>} arr 
+ * @returns {T}
+ */
+export function choose(arr) {
     let rand = Math.floor(Math.random() * arr.length);
     return arr[rand];
-};
+}
 
-exports.chooseBiased = function(arr) {
+/**
+ * @template T
+ * @param {Array<T>} arr 
+ * @returns {T}
+ */
+export function chooseBiased(arr) {
     const map = [];
     let repeat = arr.length;
     // e.g. for an array with 3 items: [1, 2, 3]
@@ -51,28 +73,47 @@ exports.chooseBiased = function(arr) {
     const rand = Math.floor(Math.random() * map.length);
     const index = map[rand];
     return arr[index];
-};
+}
 
-exports.delay = function delay(ms) {
+/**
+ * @param {number} ms 
+ * @returns {Promise}
+ */
+export function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
-};
+}
 
 /**
  * Check if the given member has at least one of the roles given in roleNames
- * @param {Discord.GuildMember} member - User
+ * @param {GuildMember} member - User
  * @param {Array<string>} roleNames - Array of role names
  */
-exports.memberHasAnyRole = function(member, roleNames) {
+export function memberHasAnyRole(member, roleNames) {
     const matching = member.roles.cache.filter(r => roleNames.includes(r.name));
     return matching.size > 0;
-};
+}
 
 /**
  * Check if the given member has at all of the roles given in roleNames
- * @param {Discord.GuildMember} member - User
+ * @param {GuildMember} member - User
  * @param {Array<string>} roleNames - Array of role names
  */
-exports.memberHasAllRoles = function(member, roleNames) {
+export function memberHasAllRoles(member, roleNames) {
     const matching = member.roles.cache.filter(r => roleNames.includes(r.name));
     return matching.size === roleNames.length;
-};
+}
+
+/**
+ * @param {import('./types/globals').botClient} bot
+ * @param {string} thing
+ * @param {any} err
+ */
+export function logError(bot, thing, err) {
+    const logChannel = bot.channels.cache.find(x => !x.isDMBased() && x.name === 'moderation-log');
+    if (!logChannel || !logChannel.isSendable()) {
+        console.error(err);
+        return;
+    }
+
+    logChannel.send(`Error during ${thing} : ${err}`);
+}

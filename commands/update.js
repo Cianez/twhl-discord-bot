@@ -1,32 +1,33 @@
-var Discord = require('discord.js');
-const lib = require('../lib');
-const child_process = require('child_process');
+import { Message } from 'discord.js';
+import { memberHasAllRoles } from '../lib.js';
+import { execSync } from 'child_process';
 
-module.exports = {
-    name: 'update',
-    description: 'Update the bot',
-    hidden: true,
-    /**
-     * @param {Discord.Message} message 
-     * @param {Array<string>} args 
-     */
-    async execute(message, args) {
-        if (message.channel.name !== 'bot-testing-channel') return;
-        if (!lib.memberHasAllRoles(message.member, ['Admins'])) return;
-        if (message.member.id !== '130279066451312640') return; // Go away everyone else
+export const name = 'update';
+export const description = 'Update the bot';
+export const hidden = true;
 
-        const production = message.guild.id === '291678871856742400';
-        await message.channel.send('Updating...');
+/**
+ * @param {Message} message
+ * @param {Array<string>} args
+ */
+export async function execute(message, args) {
+    const channel = message.channel;
+    if (!channel.isSendable() || channel.isDMBased()) return;
+    if (channel.name !== 'bot-testing-channel') return;
+    if (!message.member || !memberHasAllRoles(message.member, ['Admins'])) return;
+    if (message.member.id !== '130279066451312640') return; // Go away everyone else
 
-        if (production) {
-            child_process.execSync('git reset --hard');
-            child_process.execSync('git pull');
-            child_process.execSync('npm install');
-            child_process.execSync('pm2 restart twhl.js');
-        } else {
-            setTimeout(() => {
-                message.channel.send('Or I would, if this wasn\'t the test server.');
-            }, 1500);
-        }
-    },
-};
+    const production = message.guild?.id === '291678871856742400';
+    await channel.send('Updating...');
+
+    if (production) {
+        execSync('git reset --hard');
+        execSync('git pull');
+        execSync('npm install');
+        execSync('pm2 restart twhl.js');
+    } else {
+        setTimeout(() => {
+            channel.send('Or I would, if this wasn\'t the test server.');
+        }, 1500);
+    }
+}

@@ -1,18 +1,28 @@
-var Discord = require('discord.js');
+import { Attachment, AttachmentBuilder, ChannelType, EmbedBuilder } from 'discord.js';
+import { logError } from '../lib.js';
+/** @import { Channel } from 'discord.js' */
 
-const isImage = (/** @type {Discord.AttachmentBuilder} */ attachment) => {
+const isImage = (/** @type {Attachment | AttachmentBuilder} */ attachment) => {
     const extensions = ['.png', '.jpg', '.jpeg', '.gif'];
-    return attachment.name && extensions.some(e => attachment.name.endsWith(e));
+    const name = attachment.name;
+    return name && extensions.some(e => name.endsWith(e));
 };
 
-const isMedia = (/** @type {Discord.AttachmentBuilder} */ attachment) => {
+const isMedia = (/** @type {Attachment | AttachmentBuilder} */ attachment) => {
     const extensions = ['.mp4', '.webm', '.mov', '.gifv'];
-    return attachment.name && extensions.some(e => attachment.name.endsWith(e));
+    const name = attachment.name;
+    return name && extensions.some(e => name.endsWith(e));
 };
 
+/**
+ * @param {number} num
+ */
 function round(num) {
     return Math.round(num * 100) / 100;
 }
+/**
+ * @param {number} bytes
+ */
 function format_filesize(bytes)
 {
     if (bytes < 1024) return bytes + 'b';
@@ -28,32 +38,34 @@ function format_filesize(bytes)
     return round(pbytes) + 'pb';
 }
 
-module.exports = {
-    name: 'log-messages',
-    /**
-     * @param {Discord.Client} bot
-     */
-    register(bot) {
-        /** @type {Discord.TextChannel} */
-        let logChannel = null;
+export const name = 'log-messages';
 
-        // Get the channel
-        bot.on('ready', () => {
-            logChannel = bot.channels.cache.find(x => x.name === 'moderation-log');
-        });
+/**
+ * @param {import('../types/globals').botClient} bot 
+ */
+export function register(bot) {
+    /** @type {Channel | undefined | null} */
+    let logChannel = null;
 
-        // Track deletes
-        bot.on('messageDelete', message => {
-            if (!logChannel) return;
+    // Get the channel
+    bot.on('clientReady', () => {
+        logChannel = bot.channels.cache.find(x => x.type == ChannelType.GuildText && x.name === 'moderation-log');
+    });
+
+    // Track deletes
+    bot.on('messageDelete', message => {
+        try {
+            if (!logChannel || !logChannel.isSendable()) return;
             if (message == null) return;
-            if (message.member.user.bot) return;
+
+            if (!message.member || message.member.user.bot) return;
 
             const embeds = message.embeds.map(e => {
                 let values;
                 if (e.provider != null) {
-                    values = [e.type + ' - ' + e.provider.name, e.title, e.url];
+                    values = [e.provider.name, e.title, e.url];
                 } else {
-                    values = [e.type, e.title, e.url];
+                    values = [e.title, e.url];
                 }
                 return { name: 'Embed', value: values.filter(x => x).join('\n') };
             });
@@ -61,12 +73,20 @@ module.exports = {
                 return { name: 'Attachment', value: a.contentType + ': ' + a.name + ' (' + format_filesize(a.size) + ') ' + ' - ' + a.url };
             });
             const files = message.attachments.filter(a => isImage(a) || isMedia(a)).map(a => {
-                return new Discord.AttachmentBuilder(a.attachment, a.name);
-            });
-            const alert = new Discord.EmbedBuilder()
+                try {
+                    /** @type any */
+                    const anyAttachment = a;
+                    return new AttachmentBuilder(anyAttachment.attachment, {
+                        name: a.name
+                    });
+                } catch (_) {
+                    return null;
+                }
+            }).filter(x => !!x);
+            const alert = new EmbedBuilder()
                 .setColor('#FF0A43')
                 .setTitle('Message deleted')
-                .setAuthor({ name: `${message.member.displayName} (${message.member.user.username}#${message.member.user.discriminator})`, iconURL: message.member.user.avatarURL() })
+                .setAuthor({ name: `${message.member.displayName} (${message.member.user.username}#${message.member.user.discriminator})`, iconURL: message.member.user.avatarURL() ?? undefined })
                 .addFields([
                     { name: 'Author', value: `${message.author}`, inline: true },
                     { name: 'Channel', value: `${message.channel}`, inline: true },
@@ -78,19 +98,24 @@ module.exports = {
             if (files.length == 1 && isImage(files[0]) && files[0].name) {
                 alert.setImage('attachment://' + files[0].name);
             }
-            logChannel.send({ embeds: [ alert ], files });
-        });
+            logChannel.send({ embeds: [alert], files });
+        } catch (error) {
+            logError(bot, 'event: log-messages/messageDelete', error);
+        }
+    });
 
-        // Track updates
-        bot.on('messageUpdate', (oldMessage, message) => {
-            if (!logChannel) return;
-            if (message.member.user.bot) return;
+    // Track updates
+    bot.on('messageUpdate', (oldMessage, message) => {
+        try {
+            if (!logChannel || !logChannel.isSendable()) return;
+            if (!message.member || message.member.user.bot) return;
 
+            /** @type {AttachmentBuilder[]} */
             const files = [];
-            const alert = new Discord.EmbedBuilder()
+            const alert = new EmbedBuilder()
                 .setColor('#FFBA1C')
                 .setTitle('Message updated')
-                .setAuthor({ name: `${message.member.displayName} (${message.member.user.username}#${message.member.user.discriminator})`, iconURL: message.member.user.avatarURL() })
+                .setAuthor({ name: `${message.member.displayName} (${message.member.user.username}#${message.member.user.discriminator})`, iconURL: message.member.user.avatarURL() ?? undefined })
                 .addFields([
                     { name: 'Author', value: `${message.author}`, inline: true },
                     { name: 'Channel', value: `${message.channel}`, inline: true },
@@ -104,11 +129,13 @@ module.exports = {
                 ]);
             } else if (oldMessage.embeds.length > 0 && message.embeds.length === 0) {
                 const embeds = oldMessage.embeds.map(e => {
-                    const values = [e.type + ' - ' + e.provider.name, e.title, e.url];
+                    const values = [e.provider?.name, e.title, e.url];
                     return { name: 'Embed', value: values.filter(x => x).join('\n') };
                 });
                 alert.addFields([{ name: 'Removed embeds', value: 'See embeds below' }])
-                     .addFields(...embeds);
+                    .addFields(...embeds);
+                // Don't really care about removing embeds
+                return;
             } else if (oldMessage.embeds.length === 0 && message.embeds.length > 0) {
                 // The action was to add embeds, the Discord client does this automatically.
                 // We don't need to log this.
@@ -118,11 +145,25 @@ module.exports = {
                 const attachInfo = oldMessage.attachments.map(a => {
                     return { name: 'Attachment', value: a.contentType + ': ' + a.name + ' (' + format_filesize(a.size) + ') ' + ' - ' + a.url };
                 });
-                files.push(...oldMessage.attachments.filter(a => isImage(a) || isMedia(a)).filter(x => x.size < 2048 * 1024 * 1024).map(a => {
-                    return new Discord.AttachmentBuilder(a.attachment, a.name);
-                }));
+                files.push(
+                    ...oldMessage.attachments
+                        .filter(a => isImage(a) || isMedia(a))
+                        .filter(x => x.size < 2048 * 1024 * 1024)
+                        .map(a => {
+                            try {
+                                /** @type any */
+                                const anyAttachment = a;
+                                return new AttachmentBuilder(anyAttachment.attachment, {
+                                    name: a.name
+                                });
+                            } catch (_) {
+                                return null;
+                            }
+                        })
+                        .filter(x => !!x)
+                );
                 alert.addFields([{ name: 'Attachments removed', value: 'See details' }])
-                     .addFields(...attachInfo);
+                    .addFields(...attachInfo);
                 if (attachInfo.length == 1 && files.length == 1 && isImage(files[0])) {
                     alert.setImage('attachment://' + files[0].name);
                 }
@@ -135,19 +176,23 @@ module.exports = {
             } else {
                 alert.addFields([
                     { name: 'I don\'t know!', value: 'The edit was something I am unable to deal with. Time to panic!' },
-                    { name: 'Debug information', value: '```\n' +  JSON.stringify({
-                        old: {
-                            content: oldMessage.content,
-                            embeds: oldMessage.embeds
-                        },
-                        new: {
-                            content: message.content,
-                            embeds: message.embeds
-                        }
-                    }).substr(0, 1000) + '\n```' }
+                    {
+                        name: 'Debug information', value: '```\n' + JSON.stringify({
+                            old: {
+                                content: oldMessage.content,
+                                embeds: oldMessage.embeds
+                            },
+                            new: {
+                                content: message.content,
+                                embeds: message.embeds
+                            }
+                        }).substr(0, 1000) + '\n```'
+                    }
                 ]);
             }
             logChannel.send({ embeds: [alert], files });
-        });
-    }
-};
+        } catch (error) {
+            logError(bot, 'event: log-messages/messageUpdate', error);
+        }
+    });
+}
