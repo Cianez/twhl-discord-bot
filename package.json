@@ -1,6 +1,6 @@
 {
   "name": "twhl-discord-bot",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "The official TWHL Discord Bot",
   "main": "twhl.js",
   "author": "TWHL Bot Development Team",
