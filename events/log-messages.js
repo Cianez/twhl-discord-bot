@@ -2,6 +2,8 @@ import { Attachment, AttachmentBuilder, ChannelType, EmbedBuilder } from 'discor
 import { logError } from '../lib.js';
 /** @import { Channel } from 'discord.js' */
 
+const honeypotChannelId = '1523148189849354250';
+
 const isImage = (/** @type {Attachment | AttachmentBuilder} */ attachment) => {
     const extensions = ['.png', '.jpg', '.jpeg', '.gif'];
     const name = attachment.name;
@@ -59,6 +61,7 @@ export function register(bot) {
             if (message == null) return;
 
             if (!message.member || message.member.user.bot) return;
+            if (message.channel.id == honeypotChannelId) return;
 
             const embeds = message.embeds.map(e => {
                 let values;
