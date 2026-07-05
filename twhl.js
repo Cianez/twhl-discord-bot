@@ -110,7 +110,7 @@ bot.on('messageCreate', message => {
 
     } else {
         for (const f of bot.filters.toJSON()) {
-            if (f.matcher.exec(message.content)) {
+            if (!f.matcher || f.matcher.exec(message.content)) {
                 try {
                     f.execute(message, bot);
                 } catch (error) {

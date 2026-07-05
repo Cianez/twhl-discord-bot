@@ -1,6 +1,9 @@
 import { Message } from 'discord.js';
 import { logError, memberHasAnyRole } from '../lib.js';
 
+export const name = 'honeypot_channel';
+export const matcher = null;
+
 const honeypotChannelId = '1523148189849354250';
 
 /** @type {Set<string>} */
