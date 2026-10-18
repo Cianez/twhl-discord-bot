@@ -22,5 +22,8 @@ Here are some resources to get started:
 - <https://www.learn-cpp.org/>
 - <https://beginnersbook.com/2017/08/c-plus-plus-tutorial-for-beginners/>
 - <https://cppreference.com/> (advanced - more technical)
+If this is not for you, try one of the following alternative SDKs:
+- Half-Life Featureful: <https://github.com/FreeSlave/halflife-featureful/releases>
+- Spirit of Half-Life (updated version): <https://github.com/LogicAndTrick/halflife-updated/releases>
     `.trim());
 }
