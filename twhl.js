@@ -41,6 +41,9 @@ const slashCommands = [];
 for (const file of readdirSync('./commands').filter(file => file.endsWith('.js'))) {
     const command = require(`./commands/${file}`);
     bot.commands.set(command.name, command);
+    if (Array.isArray(command.aliases)) {
+        for (const alias of command.aliases) bot.commands.set(alias, command);
+    }
     if (command.slash) {
         const builder = new SlashCommandBuilder()
             .setName(command.name)

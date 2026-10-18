@@ -1,7 +1,7 @@
 import { Message } from 'discord.js';
 
 export const name = 'twhl';
-export const description = 'Posts a link to https://twhl.info/';
+export const description = 'Posts a link to <https://twhl.info/>';
 
 /**
  * @param {Message} message 
