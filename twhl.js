@@ -1,4 +1,6 @@
 import { readdirSync } from 'fs';
+import http from 'node:http';
+import { json } from 'node:stream/consumers';
 import { Client, Collection, DMChannel, MessageFlags } from 'discord.js';
 import winston from 'winston';
 import { REST } from '@discordjs/rest';
@@ -8,7 +10,7 @@ import { logError } from './lib.js';
 
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
-const { token, clientid, guildid } = require('./auth.json');
+const { token, clientid, guildid, webhookSecret } = require('./auth.json');
 
 // Configure logger settings
 const logger = winston.createLogger({
@@ -36,6 +38,7 @@ bot.logger = logger;
 bot.commands = new Collection();
 bot.filters = new Collection();
 bot.events = new Collection();
+bot.webhooks = new Collection();
 const slashCommands = [];
 
 for (const file of readdirSync('./commands').filter(file => file.endsWith('.js'))) {
@@ -69,6 +72,11 @@ for (const file of readdirSync('./events').filter(file => file.endsWith('.js')))
     const event = require(`./events/${file}`);
     bot.events.set(event.name, event);
     event.register(bot);
+}
+
+for (const file of readdirSync('./webhooks').filter(file => file.endsWith('.js'))) {
+    const webhook = require(`./webhooks/${file}`);
+    bot.webhooks.set(webhook.name, webhook);
 }
 
 bot.on('interactionCreate', async interaction => {
@@ -125,3 +133,38 @@ bot.on('messageCreate', message => {
 
     }
 });
+
+// handle webhooks
+http.createServer(async (request, response) => {
+    if (request.method !== 'POST') {
+        response.statusCode = 404;
+        response.end('Not found');
+        return;
+    }
+
+    const authorization = request.headers['authorization'];
+    if (authorization !== `Bearer ${webhookSecret}`) {
+        response.statusCode = 401;
+        response.end('Unauthorized');
+        return;
+    }
+    
+    const path = new URL(request.url ?? '/', `http://localhost`).pathname.substring(1);
+    const hook = bot.webhooks.get(path);
+    if (!hook || !hook.execute) {
+        response.statusCode = 404;
+        response.end('Not found');
+        return;
+    }
+
+    try {
+        const body = await json(request);
+        await Promise.resolve(hook.execute(request, response, body, bot));
+        response.statusCode = 200;
+        response.end('OK');
+    } catch (error) {
+        logError(bot, 'webhook: ' + path, error);
+        response.statusCode = 500;
+        response.end('Internal server error');
+    }
+}).listen(3000, '127.0.0.1');

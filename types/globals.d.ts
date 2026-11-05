@@ -7,5 +7,6 @@ export type botClient = Client & {
     silenced: boolean,
     commands: Collection,
     filters: Collection,
-    events: Collection
+    events: Collection,
+    webhooks: Collection,
 };
