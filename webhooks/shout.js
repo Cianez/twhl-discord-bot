@@ -48,14 +48,10 @@ export async function execute(request, response, shout, bot) {
     const hook = await getChannelWebhook(channel);
     if (!hook) throw new Error('Failed to get or create webhook');
 
-    let avatarUrl = typeof shout.user.avatar_full === 'string' && !!shout.user.avatar_full
+    const avatarUrl = typeof shout.user.avatar_full === 'string' && !!shout.user.avatar_full
         ? shout.user.avatar_full.replaceAll('http://twhl/', 'https://twhl.info/')
         : undefined;
-    const timestamp = typeof shout.created_at === 'string' && !!shout.created_at
-        ? new Date(shout.created_at)
-        : new Date();
 
-    avatarUrl = 'https://twhl.info/uploads/avatars/small/01983_04651.png';
     hook.send({
         username: `${shout.user.name} 🗣️📦 via TWHL Shoutbox`,
         avatarURL: avatarUrl,
