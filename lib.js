@@ -1,5 +1,6 @@
 import { request } from 'https';
 import { GuildMember } from 'discord.js';
+import { Parser, ParserConfiguration } from '@logicandtrick/twhl-wikicode-parser';
 
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
@@ -116,4 +117,39 @@ export function logError(bot, thing, err) {
     }
 
     logChannel.send(`Error during ${thing} : ${err}`);
+}
+
+const webhookCache = new Map();
+
+/**
+ * 
+ * @param {import('discord.js').TextChannel} channel 
+ * @returns {Promise<import('discord.js').Webhook>}
+ */
+export async function getChannelWebhook(channel) {
+    if (webhookCache.has(channel.id)) return webhookCache.get(channel.id);
+
+    const hooks = await channel.fetchWebhooks();
+    let hook = hooks.find(h => h.owner?.id === channel.client.user.id && h.name === 'TWHL Shouts');
+    hook ??= await channel.createWebhook({ name: 'TWHL Shouts' });
+
+    webhookCache.set(channel.id, hook);
+    return hook;
+}
+
+const parser = new Parser(ParserConfiguration.Twhl());
+
+/**
+ * 
+ * @param {string} content 
+ * @returns {string}
+ */
+export function parseWikiCodePlainText(content) {
+    return parser.ParseResult(content).ToPlainText();
+}
+
+export function truncateText(text, limit) {
+    if (typeof text !== 'string') return '';
+    if (text.length <= limit) return text;
+    return `${text.slice(0, limit).trimEnd()}...`;
 }

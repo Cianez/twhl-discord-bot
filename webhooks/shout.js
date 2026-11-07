@@ -1,22 +1,5 @@
 import { ChannelType } from 'discord.js';
-
-const webhookCache = new Map();
-
-/**
- * 
- * @param {import('discord.js').TextChannel} channel 
- * @returns {Promise<import('discord.js').Webhook>}
- */
-async function getChannelWebhook(channel) {
-    if (webhookCache.has(channel.id)) return webhookCache.get(channel.id);
-
-    const hooks = await channel.fetchWebhooks();
-    let hook = hooks.find(h => h.owner?.id === channel.client.user.id && h.name === 'TWHL Shouts');
-    hook ??= await channel.createWebhook({ name: 'TWHL Shouts' });
-
-    webhookCache.set(channel.id, hook);
-    return hook;
-}
+import { getChannelWebhook } from '../lib.js';
 
 export const name = 'shout';
 
